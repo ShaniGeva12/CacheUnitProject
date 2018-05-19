@@ -59,4 +59,11 @@ extends java.lang.Object
 		return dmArray;
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void updateFile(DataModel model)
+	{
+		dao.save (model);
+	}
+
+	
 }
