@@ -27,45 +27,44 @@ public class CacheUnitTest
     public void tearDown() throws Exception {
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
     public void getDataModels()
     {
-
-
         LRUAlgoCacheImpl<Long, DataModel<Integer>> lru = new LRUAlgoCacheImpl<>(25);
-        DaoFileImpl<Integer> daoFile = new DaoFileImpl<>("out.txt");
+        DaoFileImpl<Integer> daoFile = new DaoFileImpl<>("output.txt");
 
-        @SuppressWarnings({ "unchecked" })
 		CacheUnit<Integer> cacheUnit = new CacheUnit(lru, daoFile);
 
         for (int i = 0; i < 27; i++)
         {
-            //lru.putElement(Long.valueOf(i),new DataModel(Long.valueOf(i),i));
+          lru.putElement(Long.valueOf(i),new DataModel(Long.valueOf(i),i));
         }
 
         for (int i = 0; i < 150; i++)
         {
-            int integer = i;
-           //daoFile.save(new DataModel(Long.valueOf(i), integer));
+           int integer = i;
+           daoFile.save(new DataModel(Long.valueOf(i), integer));
         }
 
-
-        Long[] ids = {Long.valueOf(19),Long.valueOf(20),Long.valueOf(110),Long.valueOf(101)};
+        Long[] ids = {Long.valueOf(8), Long.valueOf(66), Long.valueOf(10), Long.valueOf(12)};
         DataModel<Integer>[] dataModels = null;
 
         try
         {
             dataModels = cacheUnit.getDataModels(ids);
-        } catch (ClassNotFoundException e) {
+        } 
+        catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             e.printStackTrace();
         }
-
+        
+        System.out.println("Here are our Pages (DataModels) :");
         for (DataModel model: dataModels)
         {
-            System.out.println(model.getDataModelId() + " "+model.getContent());
+            System.out.println("Page ID = " + model.getDataModelId() + " , Page content = "+model.getContent());
         }
 
 
