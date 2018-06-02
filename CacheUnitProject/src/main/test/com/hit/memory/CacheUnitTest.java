@@ -47,7 +47,9 @@ public class CacheUnitTest
            daoFile.save(new DataModel(Long.valueOf(i), integer));
         }
 
-        Long[] ids = {Long.valueOf(8), Long.valueOf(66), Long.valueOf(10), Long.valueOf(12)};
+        Long[] ids = {Long.valueOf(8), Long.valueOf(66), 
+        		Long.valueOf(10), Long.valueOf(12),
+        		Long.valueOf(1), Long.valueOf(12)};
         DataModel<Integer>[] dataModels = null;
 
         try
@@ -61,7 +63,7 @@ public class CacheUnitTest
             e.printStackTrace();
         }
         
-        System.out.println("Here are our Pages (DataModels) :");
+        System.out.println("Here are our Pages (DataModels) : \n");
         for (DataModel model: dataModels)
         {
             System.out.println("Page ID = " + model.getDataModelId() + " , Page content = "+model.getContent());

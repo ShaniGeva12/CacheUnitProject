@@ -5,6 +5,7 @@ import com.hit.services.CacheUnitController;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.Executor;
@@ -19,14 +20,13 @@ public class Server implements Observer
     CacheUnitController unitController;
     Executor threadPool;
 
-
     public Server()
     {
         unitController = new CacheUnitController ();
         threadPool = Executors.newFixedThreadPool (2);
     }
 
-
+    
     void start()
     {
         serverIsRunning = true;
@@ -53,6 +53,7 @@ public class Server implements Observer
 
             Thread thread = new Thread
                     (new HandleRequest(accept,unitController));
+            
 
             threadPool.execute (thread);
 
@@ -73,19 +74,25 @@ public class Server implements Observer
         {
             System.out.println ("Starting Server...");
             start ();
+        }
 
-        }else
+        else
         {
-            System.out.println ("Shutdown In Here");
-            serverIsRunning = false;
-            try
-            {
-                socket.close ();
-            } catch (IOException e)
-            {
-                e.printStackTrace ();
-            }
-            System.out.println ("Shutdown Server...");
+        	if(serverIsRunning) {
+        		System.out.println ("Shutdown Server...");
+                serverIsRunning = false;
+                try
+                {
+                    socket.close ();
+                } catch (IOException e)
+                {
+                    e.printStackTrace ();
+                }
+                System.out.println ("Shutdown Server...");
+        	}else {
+        		System.out.println("Server not running");
+        	}
+            
         }
 
     }
