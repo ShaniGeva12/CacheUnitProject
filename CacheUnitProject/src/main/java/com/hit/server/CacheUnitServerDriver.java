@@ -1,7 +1,9 @@
 package com.hit.server;
 
 import com.hit.util.CLI;
+import com.hit.util.DataStat;
 
+@SuppressWarnings("unused")
 public class CacheUnitServerDriver
 {
     public static void main(String[] args)
@@ -11,8 +13,7 @@ public class CacheUnitServerDriver
         cli.addObserver(server);
         Thread thread = new Thread (cli);
 
+
         thread.start ();
-
     }
-
 }

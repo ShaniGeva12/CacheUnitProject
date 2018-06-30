@@ -3,6 +3,7 @@ package com.hit.server;
 
 import java.io.Serializable;
 
+@SuppressWarnings("serial")
 public class Request<T> implements Serializable
 {
 

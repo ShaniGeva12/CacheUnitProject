@@ -1,11 +1,11 @@
 package com.hit.server;
 
 import com.hit.services.CacheUnitController;
+import com.hit.util.DataStat;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.Executor;
@@ -16,24 +16,35 @@ public class Server implements Observer
 {
     private ServerSocket socket;
     private boolean serverIsRunning;
-    private boolean startCommand = false;
-    CacheUnitController unitController;
+    
+    @SuppressWarnings("unused")
+	private boolean startCommand = false;
+    
+    @SuppressWarnings("rawtypes")
+	CacheUnitController unitController;
+    
     Executor threadPool;
 
-    public Server()
+    DataStat dataStats;
+
+    @SuppressWarnings("rawtypes")
+	public Server()
     {
         unitController = new CacheUnitController ();
-        threadPool = Executors.newFixedThreadPool (2);
+        threadPool = Executors.newFixedThreadPool (100);
+        
+        dataStats = DataStat.getInstance ();
     }
 
     
-    void start()
+    @SuppressWarnings("rawtypes")
+	void start()
     {
         serverIsRunning = true;
 
         try
         {
-            socket = new ServerSocket (12345);
+            socket = new ServerSocket (1234);
         } catch (IOException e)
         {
             e.printStackTrace ();
@@ -46,6 +57,7 @@ public class Server implements Observer
             {
                 System.out.println ("Waiting For Client");
                 accept = socket.accept ();
+                dataStats.addRequest ();
             } catch (IOException e)
             {
                 e.printStackTrace ();
@@ -53,13 +65,8 @@ public class Server implements Observer
 
             Thread thread = new Thread
                     (new HandleRequest(accept,unitController));
-            
-
             threadPool.execute (thread);
-
-
         }
-
         ((ExecutorService )threadPool).shutdown();
 
     }
@@ -69,7 +76,6 @@ public class Server implements Observer
     {
         String inputCommand = (String) arg;
 
-
         if(inputCommand.equals ("Start"))
         {
             System.out.println ("Starting Server...");
@@ -78,7 +84,8 @@ public class Server implements Observer
 
         else
         {
-        	if(serverIsRunning) {
+        	if(serverIsRunning) 
+        	{
         		System.out.println ("Shutdown Server...");
                 serverIsRunning = false;
                 try
@@ -89,7 +96,8 @@ public class Server implements Observer
                     e.printStackTrace ();
                 }
                 System.out.println ("Shutdown Server...");
-        	}else {
+        	}
+        	else {
         		System.out.println("Server not running");
         	}
             

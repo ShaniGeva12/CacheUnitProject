@@ -29,7 +29,7 @@ public class CacheUnitTest
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
-    public void getDataModels()
+    public void getDataModels() throws IOException
     {
         LRUAlgoCacheImpl<Long, DataModel<Integer>> lru = new LRUAlgoCacheImpl<>(25);
         DaoFileImpl<Integer> daoFile = new DaoFileImpl<>("output.txt");
@@ -52,16 +52,7 @@ public class CacheUnitTest
         		Long.valueOf(1), Long.valueOf(12)};
         DataModel<Integer>[] dataModels = null;
 
-        try
-        {
-            dataModels = cacheUnit.getDataModels(ids);
-        } 
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } 
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+        dataModels = cacheUnit.getDataModels(ids);
         
         System.out.println("Here are our Pages (DataModels) : \n");
         for (DataModel model: dataModels)

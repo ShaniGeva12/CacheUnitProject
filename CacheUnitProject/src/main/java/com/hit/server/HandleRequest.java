@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.hit.dm.DataModel;
+import com.hit.util.DataStat;
 import com.hit.services.CacheUnitController;
 
 import java.io.IOException;
@@ -16,24 +17,33 @@ import java.util.Map;
 public class HandleRequest<T> implements Runnable
 {
 
-    Socket socket;
-    CacheUnitController unitController;
+    private Socket socket;
+    @SuppressWarnings("rawtypes")
+	private CacheUnitController unitController;
 
-    Request<DataModel<T>[]> socketRequest;
+    private Request<DataModel<T>[]> socketRequest;
 
-    ObjectInputStream inputStream;
-    ObjectOutputStream outputStream;
+    DataStat dataStats;
 
-    Gson gson;
-
-    Type ref;
-
-
-    public HandleRequest(Socket s, CacheUnitController controller)
+    public HandleRequest(Socket s, @SuppressWarnings("rawtypes") CacheUnitController controller)
     {
         this.socket = s;
         this.unitController = controller;
 
+        dataStats = DataStat.getInstance ();
+
+    }
+
+
+    @SuppressWarnings({ "rawtypes", "unused", "unchecked" })
+	@Override
+    public void run()
+    {
+        boolean statsRequest = false;
+        ObjectInputStream inputStream = null;
+        ObjectOutputStream outputStream = null;
+
+        Gson gson = new GsonBuilder ().create ();
         try
         {
             inputStream = new ObjectInputStream (socket.getInputStream ());
@@ -42,95 +52,109 @@ public class HandleRequest<T> implements Runnable
         {
             e.printStackTrace ();
         }
-
-        gson = new GsonBuilder ().create ();
-
-    }
-
-
-    @SuppressWarnings({ "rawtypes" })
-	@Override
-    public void run()
-    {
-       @SuppressWarnings("rawtypes")
-	String inputString;
+        String inputString;
 
         DataModel[] model = null;
         String command;
         DataModel<T>[] body;
+
         try
         {
-            ref = new TypeToken<Request<DataModel<T>[]>> (){}.getType();
+            Type ref = new TypeToken<Request<DataModel<T>[]>> ()
+            {
+            }.getType ();
 
             inputString = (String) inputStream.readObject ();
 
-            socketRequest = new Gson().fromJson(inputString, ref);
+            if(inputString.equals ("stats"))
+            {
+                statsRequest = true;
+            }else
+            {
+                socketRequest = new Gson().fromJson(inputString, ref);
+            }
 
-        } catch (IOException e)
-        {
-            e.printStackTrace ();
-        } catch (ClassNotFoundException e)
+        } catch (IOException | ClassNotFoundException e)
         {
             e.printStackTrace ();
         }
 
-        Map headers = socketRequest.getHeaders ();
 
-        command = (String) headers.get ("action");
-
-        body = socketRequest.getBody ();
-
-
-        if(command.equals ("GET"))
+        if(!statsRequest)
         {
+            Map headers = socketRequest.getHeaders ();
 
-            DataModel[] dataModels = unitController.get (body);
+            command = (String) headers.get ("action");
 
-            for(DataModel dataModel: dataModels)
+            body = socketRequest.getBody ();
+
+
+            if(command.equals ("GET"))
+            {
+
+                DataModel[] dataModels = unitController.get (body);
+
+                String gsonString = gson.toJson (dataModels);
+                try
+                {
+                    outputStream.writeObject (gsonString);
+                    outputStream.flush ();
+                } catch (IOException e)
+                {
+                    e.printStackTrace ();
+                }
+
+
+            }else if(command.equals ("DELETE"))
+            {
+
+                boolean delete = unitController.delete (body);
+
+                String s = gson.toJson (delete);
+
+                try
+                {
+                    outputStream.writeObject (s);
+                    outputStream.flush ();
+                } catch (IOException e)
+                {
+                    e.printStackTrace ();
+                }
+
+            }else if(command.equals ("UPDATE"))
+            {
+
+                boolean update = unitController.update (body);
+
+                String s = gson.toJson (update);
+
+                try
+                {
+                    outputStream.writeObject (s);
+                    outputStream.flush ();
+                } catch (IOException e)
+                {
+                    e.printStackTrace ();
+                }
+
+            }else
             {
                 try
                 {
-                    String outputGson = gson.toJson (dataModel);
-                    outputStream.writeObject (outputGson);
+                    outputStream.writeObject ("Unknown Action");
+                    outputStream.flush ();
                 } catch (IOException e)
                 {
                     e.printStackTrace ();
                 }
             }
-
-
-        }else if(command.equals ("DELETE"))
-        {
-
-            boolean delete = unitController.delete (body);
-
-            try
-            {
-                outputStream.writeObject (delete);
-            } catch (IOException e)
-            {
-                e.printStackTrace ();
-            }
-
-        }else if(command.equals ("UPDATE"))
-        {
-
-            boolean update = unitController.update (body);
-
-            try
-            {
-                outputStream.writeObject (update);
-            } catch (IOException e)
-            {
-                e.printStackTrace ();
-            }
-
         }else
         {
+            String jsonString = gson.toJson (dataStats);
             try
             {
-                outputStream.writeObject ("Unknown Action");
-                outputStream.flush ();
+
+                outputStream.writeObject (jsonString);
             } catch (IOException e)
             {
                 e.printStackTrace ();
@@ -138,18 +162,18 @@ public class HandleRequest<T> implements Runnable
         }
 
 
-
-    }
-
-
-    private void writeToOutputStream(String s)
-    {
         try
         {
-            outputStream.writeObject (s);
+            outputStream.close ();
+            inputStream.close ();
+
         } catch (IOException e)
         {
             e.printStackTrace ();
         }
+
     }
+
 }
+   
+       
